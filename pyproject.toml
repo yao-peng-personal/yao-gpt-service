@@ -1,0 +1,22 @@
+[project]
+name = "yao-gpt-service"
+version = "0.1.0"
+description = "Chatbot service using CrewAI and FastAPI"
+requires-python = ">=3.11"
+dependencies = [
+    "crewai>=1.14",
+    "fastapi>=0.136",
+    "uvicorn[standard]>=0.46",
+    "pydantic>=2.12",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.11",
+]
+
+[tool.pyright]
+exclude = [
+    "notebooks",
+    "scripts",
+]
