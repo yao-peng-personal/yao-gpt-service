@@ -74,8 +74,6 @@ async def chat(request: ChatRequest) -> ChatResponse:
     """
     provider = request.provider or settings.default_provider
 
-    if provider == ModelProvider.OPENAI and not settings.openai_api_key:
-        raise HTTPException(status_code=400, detail="OpenAI API key not configured")
     if provider == ModelProvider.DEEPSEEK and not settings.deepseek_api_key:
         raise HTTPException(status_code=400, detail="DeepSeek API key not configured")
     if request.enable_search and not settings.tavily_api_key:

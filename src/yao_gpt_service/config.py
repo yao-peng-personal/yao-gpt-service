@@ -14,19 +14,15 @@ _ENV_FILE = Path(__file__).resolve().parent.parent.parent / ".env"
 class ModelProvider(StrEnum):
     """Supported LLM providers."""
 
-    OPENAI = "openai"
     DEEPSEEK = "deepseek"
 
 
 """Registry mapping provider models to CrewAI-compatible model strings."""
 MODEL_REGISTRY: dict[ModelProvider, dict[str, str]] = {
-    ModelProvider.OPENAI: {
-        "gpt-4o": "openai/gpt-4o",
-        "gpt-4o-mini": "openai/gpt-4o-mini",
-        "gpt-4-turbo": "openai/gpt-4-turbo",
-    },
     ModelProvider.DEEPSEEK: {
         "deepseek-chat": "deepseek/deepseek-chat",
+        "deepseek-v4-pro": "deepseek/deepseek-v4-pro",
+        "deepseek-v4-flash": "deepseek/deepseek-v4-flash",
         "deepseek-reasoner": "deepseek/deepseek-reasoner",
     },
 }
@@ -49,7 +45,6 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
     deepseek_api_key: str = Field(default="", alias="DEEPSEEK_API_KEY")
     tavily_api_key: str = Field(default="", alias="TAVILY_API_KEY")
 
@@ -60,16 +55,13 @@ class Settings(BaseSettings):
     default_model: str = Field(default="deepseek-chat", alias="DEFAULT_MODEL")
 
     chroma_persist_dir: str = Field(
-        default="./chroma_data",
+        default=str(Path(__file__).resolve().parent.parent.parent / "chroma_data"),
         alias="CHROMA_PERSIST_DIR",
     )
 
     @model_validator(mode="after")
     def _validate_provider_has_key(self) -> Settings:
         """Ensure the API key for the default provider is configured."""
-        if self.default_provider == ModelProvider.OPENAI and not self.openai_api_key:
-            msg = "OPENAI_API_KEY is required when default_provider is openai"
-            raise ValueError(msg)
         if self.default_provider == ModelProvider.DEEPSEEK and not self.deepseek_api_key:
             msg = "DEEPSEEK_API_KEY is required when default_provider is deepseek"
             raise ValueError(msg)
@@ -98,9 +90,6 @@ class Settings(BaseSettings):
             raise ValueError(msg)
 
         crewai_model_name = registry[model]
-
-        if provider == ModelProvider.OPENAI:
-            return LLMConfig(model=crewai_model_name, api_key=self.openai_api_key)
 
         return LLMConfig(
             model=crewai_model_name,

@@ -19,7 +19,7 @@ class ChatRequest(BaseModel):
     message: str = Field(min_length=1, description="User's chat message")
     provider: ModelProvider | None = Field(
         default=None,
-        description="Model provider to use (openai, deepseek). Uses default if omitted.",
+        description="Model provider to use (deepseek). Uses default if omitted.",
     )
     model: str | None = Field(
         default=None,
