@@ -2,10 +2,13 @@
 from __future__ import annotations
 
 from enum import StrEnum
+from pathlib import Path
 from typing import NotRequired, TypedDict
 
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_ENV_FILE = Path(__file__).resolve().parent.parent.parent / ".env"
 
 
 class ModelProvider(StrEnum):
@@ -41,7 +44,7 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables and .env file."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=_ENV_FILE,
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -51,10 +54,10 @@ class Settings(BaseSettings):
     tavily_api_key: str = Field(default="", alias="TAVILY_API_KEY")
 
     default_provider: ModelProvider = Field(
-        default=ModelProvider.OPENAI,
+        default=ModelProvider.DEEPSEEK,
         alias="DEFAULT_PROVIDER",
     )
-    default_model: str = Field(default="gpt-4o-mini", alias="DEFAULT_MODEL")
+    default_model: str = Field(default="deepseek-chat", alias="DEFAULT_MODEL")
 
     chroma_persist_dir: str = Field(
         default="./chroma_data",

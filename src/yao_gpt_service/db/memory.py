@@ -157,5 +157,23 @@ class ConversationMemory:
             return len(self._collection.get(where=where)["ids"])
         return self._collection.count()
 
+    def list_sessions(self) -> list[str]:
+        """Return a sorted list of all unique session IDs.
+
+        Returns:
+            A list of session ID strings, ordered by most recent first.
+        """
+        existing = self._collection.get()
+        metadatas = existing.get("metadatas")
+        if not metadatas:
+            return []
+
+        seen: set[str] = set()
+        for meta in metadatas:
+            sid = str(meta.get("session_id", ""))
+            if sid:
+                seen.add(sid)
+        return sorted(seen, reverse=True)
+
 
 memory = ConversationMemory()

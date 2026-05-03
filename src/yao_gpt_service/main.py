@@ -114,3 +114,9 @@ async def delete_session(session_id: str) -> dict[str, str]:
     crew = ChatbotCrew(session_id=session_id)
     crew.delete_session()
     return {"status": "deleted", "session_id": session_id}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("yao_gpt_service.main:app", host="0.0.0.0", port=8000, reload=True)
