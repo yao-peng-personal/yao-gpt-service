@@ -1,3 +1,4 @@
+"""Application configuration and LLM provider registry."""
 from __future__ import annotations
 
 from enum import StrEnum
@@ -8,10 +9,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class ModelProvider(StrEnum):
+    """Supported LLM providers."""
+
     OPENAI = "openai"
     DEEPSEEK = "deepseek"
 
 
+"""Registry mapping provider models to CrewAI-compatible model strings."""
 MODEL_REGISTRY: dict[ModelProvider, dict[str, str]] = {
     ModelProvider.OPENAI: {
         "gpt-4o": "openai/gpt-4o",
@@ -26,12 +30,16 @@ MODEL_REGISTRY: dict[ModelProvider, dict[str, str]] = {
 
 
 class LLMConfig(TypedDict):
+    """Configuration dictionary passed to CrewAI's LLM constructor."""
+
     model: str
     api_key: str
     base_url: NotRequired[str]
 
 
 class Settings(BaseSettings):
+    """Application settings loaded from environment variables and .env file."""
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -55,6 +63,7 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _validate_provider_has_key(self) -> Settings:
+        """Ensure the API key for the default provider is configured."""
         if self.default_provider == ModelProvider.OPENAI and not self.openai_api_key:
             msg = "OPENAI_API_KEY is required when default_provider is openai"
             raise ValueError(msg)
@@ -68,6 +77,15 @@ class Settings(BaseSettings):
         provider: ModelProvider | None = None,
         model: str | None = None,
     ) -> LLMConfig:
+        """Resolve provider and model into a CrewAI-compatible LLM configuration.
+
+        Args:
+            provider: Override the default model provider.
+            model: Override the default model name.
+
+        Returns:
+            Configuration dict suitable for CrewAI's ``LLM(**config)``.
+        """
         provider = provider or self.default_provider
         model = model or self.default_model
         registry = MODEL_REGISTRY[provider]
@@ -88,6 +106,14 @@ class Settings(BaseSettings):
         )
 
     def list_models(self, provider: ModelProvider | None = None) -> dict[ModelProvider, list[str]]:
+        """List available models, optionally filtered by provider.
+
+        Args:
+            provider: If provided, return models for this provider only.
+
+        Returns:
+            Dictionary mapping provider enums to lists of model names.
+        """
         if provider:
             return {provider: list(MODEL_REGISTRY[provider])}
         return {p: list(models) for p, models in MODEL_REGISTRY.items()}

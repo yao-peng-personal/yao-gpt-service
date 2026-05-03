@@ -1,3 +1,4 @@
+"""FastAPI application entry point."""
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator
@@ -19,6 +20,7 @@ from yao_gpt_service.models.schemas import (
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
+    """Application lifespan context manager for startup/shutdown logic."""
     yield
 
 
@@ -40,11 +42,13 @@ app.add_middleware(
 
 @app.get("/health")
 async def health_check() -> dict[str, str]:
+    """Return a simple health-check response."""
     return {"status": "ok"}
 
 
 @app.get("/models", response_model=AvailableModelsResponse)
 async def list_models() -> AvailableModelsResponse:
+    """List all available model providers and their model names."""
     available = settings.list_models()
     providers = [
         ModelInfo(provider=provider, models=models)
@@ -63,6 +67,11 @@ async def list_models() -> AvailableModelsResponse:
     responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
 )
 async def chat(request: ChatRequest) -> ChatResponse:
+    """Process a chat message and return the LLM response.
+
+    Supports optional model/provider selection per request, web search
+    via Tavily, and session-based conversation continuity.
+    """
     provider = request.provider or settings.default_provider
 
     if provider == ModelProvider.OPENAI and not settings.openai_api_key:
@@ -101,6 +110,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
 
 @app.delete("/sessions/{session_id}")
 async def delete_session(session_id: str) -> dict[str, str]:
+    """Delete all conversation history for a given session."""
     crew = ChatbotCrew(session_id=session_id)
     crew.delete_session()
     return {"status": "deleted", "session_id": session_id}

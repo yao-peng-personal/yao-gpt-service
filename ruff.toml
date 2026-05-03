@@ -1,4 +1,5 @@
 target-version = "py311"
+line-length = 80
 
 exclude = [
     "notebooks/",
@@ -7,6 +8,7 @@ exclude = [
 
 [lint]
 select = [
+    "D",      # pycodestyle
     "E",      # pycodestyle errors
     "W",      # pycodestyle warnings
     "F",      # pyflakes
@@ -22,6 +24,9 @@ ignore = [
     "E501",   # line too long (handled by formatter)
     "B008",   # function call in argument defaults
 ]
+
+[lint.pydocstyle]
+convention = "google"
 
 [lint.per-file-ignores]
 "__init__.py" = ["F401"]

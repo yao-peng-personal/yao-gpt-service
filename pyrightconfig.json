@@ -1,5 +1,7 @@
 {
   "typeCheckingMode": "standard",
+  "venvPath": ".",
+  "venv": ".venv",
   "exclude": ["notebooks", "scripts"],
   "reportMissingTypeStubs": false,
   "reportImplicitOverride": false,

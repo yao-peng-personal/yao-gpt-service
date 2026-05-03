@@ -1,3 +1,4 @@
+"""Factory functions for building CrewAI agents."""
 from __future__ import annotations
 
 from crewai import LLM, Agent
@@ -12,6 +13,16 @@ def build_chatbot_agent(
     model: str | None = None,
     enable_search: bool = False,
 ) -> Agent:
+    """Build a CrewAI chatbot agent with the specified LLM configuration.
+
+    Args:
+        provider: The LLM provider to use. Uses the default if ``None``.
+        model: The model name. Uses the default if ``None``.
+        enable_search: If ``True``, attach the Tavily search tool.
+
+    Returns:
+        A configured CrewAI ``Agent`` instance.
+    """
     llm_config = settings.resolve_llm(provider=provider, model=model)
     llm = LLM(**llm_config)
 
@@ -40,12 +51,31 @@ def build_chatbot_agent(
 
 
 def get_llm_summary(provider: ModelProvider | None = None, model: str | None = None) -> str:
+    """Return a human-readable summary of the current LLM configuration.
+
+    Args:
+        provider: The LLM provider.
+        model: The model name.
+
+    Returns:
+        A string like ``"Provider: openai, Model: gpt-4o-mini"``.
+    """
     provider = provider or settings.default_provider
     model = model or settings.default_model
     return f"Provider: {provider}, Model: {model}"
 
 
 def format_conversation_history(session_id: str, limit: int = 10) -> str:
+    """Format the conversation history for a session as a readable string.
+
+    Args:
+        session_id: The conversation session ID.
+        limit: Maximum number of history entries to include.
+
+    Returns:
+        A newline-separated string of ``Role: message`` lines, or a
+        placeholder if no history exists.
+    """
     from yao_gpt_service.db.memory import memory
 
     entries = memory.retrieve_recent(session_id, n_results=limit)

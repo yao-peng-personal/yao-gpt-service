@@ -1,3 +1,4 @@
+"""ChromaDB-backed long-term conversation memory."""
 from __future__ import annotations
 
 import chromadb
@@ -9,9 +10,19 @@ from yao_gpt_service.config import settings
 
 
 class MemoryEntry:
+    """A single conversation memory entry stored in ChromaDB."""
+
     __slots__ = ("content", "id", "role", "session_id")
 
     def __init__(self, id: str, content: str, role: str, session_id: str) -> None:
+        """Initialize a memory entry.
+
+        Args:
+            id: Unique identifier for the entry.
+            content: The message content.
+            role: Either ``"user"`` or ``"assistant"``.
+            session_id: The session this entry belongs to.
+        """
         self.id = id
         self.content = content
         self.role = role
@@ -19,10 +30,17 @@ class MemoryEntry:
 
 
 class ConversationMemory:
+    """Persistent vector store for chatbot conversation history.
+
+    Uses ChromaDB with cosine-similarity embeddings to store and retrieve
+    conversation turns keyed by session ID.
+    """
+
     _client: ClientAPI
     _collection: chromadb.Collection
 
     def __init__(self) -> None:
+        """Open the ChromaDB persistent client and collection."""
         self._client = chromadb.PersistentClient(
             path=settings.chroma_persist_dir,
             settings=ChromaSettings(anonymized_telemetry=False),
@@ -33,6 +51,13 @@ class ConversationMemory:
         )
 
     def store(self, session_id: str, role: str, content: str) -> None:
+        """Persist a single conversation turn.
+
+        Args:
+            session_id: Identifier for the conversation session.
+            role: ``"user"`` or ``"assistant"``.
+            content: The message text.
+        """
         count = self._collection.count()
         self._collection.add(
             ids=[f"{session_id}_{count}"],
@@ -41,6 +66,16 @@ class ConversationMemory:
         )
 
     def retrieve(self, session_id: str, query: str = "", n_results: int = 10) -> list[MemoryEntry]:
+        """Retrieve memory entries by semantic similarity to the query.
+
+        Args:
+            session_id: The conversation session to search within.
+            query: A search query; defaults to a generic fallback.
+            n_results: Maximum number of results to return.
+
+        Returns:
+            A list of matching ``MemoryEntry`` objects.
+        """
         where: Where = {"session_id": session_id}
 
         results = self._collection.query(
@@ -66,6 +101,15 @@ class ConversationMemory:
         return entries
 
     def retrieve_recent(self, session_id: str, n_results: int = 10) -> list[MemoryEntry]:
+        """Retrieve the most recent conversation turns without a query.
+
+        Args:
+            session_id: The conversation session to fetch from.
+            n_results: Maximum number of results to return.
+
+        Returns:
+            A list of recent ``MemoryEntry`` objects.
+        """
         where: Where = {"session_id": session_id}
         existing = self._collection.get(
             where=where,
@@ -89,12 +133,25 @@ class ConversationMemory:
         return entries
 
     def delete_session(self, session_id: str) -> None:
+        """Remove all entries associated with a session.
+
+        Args:
+            session_id: The session to delete.
+        """
         where: Where = {"session_id": session_id}
         existing = self._collection.get(where=where)
         if existing["ids"]:
             self._collection.delete(ids=existing["ids"])
 
     def count(self, session_id: str | None = None) -> int:
+        """Return the number of entries, optionally scoped to a session.
+
+        Args:
+            session_id: If provided, count entries for this session only.
+
+        Returns:
+            Total number of memory entries.
+        """
         if session_id:
             where: Where = {"session_id": session_id}
             return len(self._collection.get(where=where)["ids"])
