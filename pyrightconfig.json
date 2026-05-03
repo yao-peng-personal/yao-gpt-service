@@ -1,0 +1,8 @@
+{
+  "typeCheckingMode": "standard",
+  "exclude": ["notebooks", "scripts"],
+  "reportMissingTypeStubs": false,
+  "reportImplicitOverride": false,
+  "reportUnknownMemberType": false,
+  "reportUnknownVariableType": false
+}
