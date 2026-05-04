@@ -1,14 +1,104 @@
-"""Streamlit chatbot UI with sidebar session management."""
-
+"""Streamlit chatbot UI with sidebar session management and Google OAuth."""
 from __future__ import annotations
+
+import os
 
 import streamlit as st
 
+for key in ("DEEPSEEK_API_KEY", "TAVILY_API_KEY"):
+    try:
+        if key in st.secrets:
+            os.environ[key] = st.secrets[key]
+    except Exception:
+        pass
+
 st.set_page_config(page_title="Yao GPT", layout="wide")
 
-from yao_gpt_service.config import ModelProvider, settings
-from yao_gpt_service.crews.chatbot_crew import ChatbotCrew
-from yao_gpt_service.db.memory import memory
+from yao_gpt_service.auth import (  # noqa: E402
+    credentials_from_dict,
+    credentials_to_dict,
+    get_auth_url,
+    get_redirect_uri,
+    get_user_info,
+    handle_callback,
+    is_allowed,
+    is_configured,
+    refresh_credentials,
+)
+from yao_gpt_service.config import ModelProvider, settings  # noqa: E402
+from yao_gpt_service.crews.chatbot_crew import ChatbotCrew  # noqa: E402
+from yao_gpt_service.db.memory import memory  # noqa: E402
+
+# ---------------------------------------------------------------------------
+# Authentication
+# ---------------------------------------------------------------------------
+
+
+def _check_auth() -> bool:
+    if os.environ.get("DISABLE_GOOGLE_AUTH", "").lower() in ("1", "true", "yes"):
+        return True
+
+    if not is_configured():
+        return True
+
+    if "credentials" in st.session_state:
+        credentials = credentials_from_dict(st.session_state["credentials"])
+        refreshed = refresh_credentials(credentials)
+        if refreshed:
+            user = get_user_info(refreshed)
+            if user and is_allowed(user.email):
+                st.session_state["credentials"] = credentials_to_dict(refreshed)
+                st.session_state["user"] = user
+                return True
+
+    query_params = st.query_params
+    code = query_params.get("code")
+    if code:
+        try:
+            credentials = handle_callback(code)
+        except Exception as exc:
+            st.error(f"OAuth callback failed: {exc}")
+            st.stop()
+        if credentials:
+            user = get_user_info(credentials)
+            if user and is_allowed(user.email):
+                st.session_state["credentials"] = credentials_to_dict(credentials)
+                st.session_state["user"] = user
+                st.query_params.clear()
+                st.rerun()
+            else:
+                email = user.email if user else "unknown"
+                st.error(f"Access denied: {email} is not in the allowlist.")
+                st.stop()
+        else:
+            st.error("Failed to authenticate with Google. Please try again.")
+            st.stop()
+
+    return False
+
+
+def _show_login() -> None:
+    st.title("Yao GPT")
+    st.markdown("### Sign in to continue")
+    st.write("This app is private. Please sign in with your Google account.")
+    auth_url = get_auth_url()
+    st.caption(
+        f"Redirect URI: `{get_redirect_uri()}` — "
+        "this must match an entry in your Google Cloud Console "
+        "→ Credentials → Authorized redirect URIs."
+    )
+    st.markdown(
+        f'<a href="{auth_url}" target="_self">'
+        '<button style="padding:12px 24px;font-size:16px;cursor:pointer;'
+        "background-color:#4285F4;color:white;border:none;border-radius:4px;"
+        '">Sign in with Google</button></a>',
+        unsafe_allow_html=True,
+    )
+
+
+if not _check_auth():
+    _show_login()
+    st.stop()
 
 # ---------------------------------------------------------------------------
 # Session state
@@ -28,14 +118,12 @@ for key, default in DEFAULTS.items():
 
 
 def start_new_chat() -> None:
-    """Reset session state to start a fresh conversation."""
     st.session_state.session_id = None
     st.session_state.messages = []
     st.rerun()
 
 
 def load_session(sid: str) -> None:
-    """Load an existing session's messages into state."""
     entries = memory.retrieve_recent(sid, n_results=200)
     st.session_state.session_id = sid
     st.session_state.messages = [
@@ -45,7 +133,6 @@ def load_session(sid: str) -> None:
 
 
 def show_sessions() -> None:
-    """Refresh the session list to reflect changes."""
     st.rerun()
 
 
@@ -55,6 +142,10 @@ def show_sessions() -> None:
 
 with st.sidebar:
     st.title("Yao GPT")
+
+    user = st.session_state.get("user")
+    if user:
+        st.caption(f"Signed in as {user.email}")
 
     if st.button("+ New Chat", use_container_width=True):
         start_new_chat()
@@ -122,6 +213,7 @@ with st.sidebar:
                     start_new_chat()
                 else:
                     show_sessions()
+
 
 # ---------------------------------------------------------------------------
 # Main chat area

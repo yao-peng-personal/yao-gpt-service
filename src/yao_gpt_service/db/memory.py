@@ -169,11 +169,13 @@ class ConversationMemory:
             return []
 
         seen: set[str] = set()
-        for meta in metadatas:
+        sessions: list[str] = []
+        for meta in reversed(metadatas):
             sid = str(meta.get("session_id", ""))
-            if sid:
+            if sid and sid not in seen:
                 seen.add(sid)
-        return sorted(seen, reverse=True)
+                sessions.append(sid)
+        return sessions
 
 
 memory = ConversationMemory()

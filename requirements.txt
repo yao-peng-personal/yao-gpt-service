@@ -1,0 +1,10 @@
+streamlit>=1.57.0
+crewai>=1.14
+fastapi>=0.136
+uvicorn[standard]>=0.46
+pydantic>=2.12
+pydantic-settings
+tavily-python>=0.7.24
+chromadb
+google-auth-oauthlib
+google-auth
