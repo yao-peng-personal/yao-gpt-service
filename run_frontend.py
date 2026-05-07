@@ -27,5 +27,5 @@ if __name__ == "__main__":
     if args.no_auth:
         env["DISABLE_AUTH"] = "true"
 
-    app = Path(__file__).parent / "frontend" / "streamlit_app.py"
+    app = Path(__file__).parent / "streamlit_app.py"
     subprocess.run([sys.executable, "-m", "streamlit", "run", str(app)], env=env)
