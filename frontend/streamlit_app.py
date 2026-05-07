@@ -1,4 +1,4 @@
-"""Streamlit chatbot UI with sidebar session management and Google OAuth."""
+"""Streamlit chatbot UI with sidebar session management and authentication."""
 from __future__ import annotations
 
 import os
@@ -15,15 +15,9 @@ for key in ("DEEPSEEK_API_KEY", "TAVILY_API_KEY"):
 st.set_page_config(page_title="Yao GPT", layout="wide")
 
 from yao_gpt_service.auth import (  # noqa: E402
-    credentials_from_dict,
-    credentials_to_dict,
-    get_auth_url,
-    get_redirect_uri,
-    get_user_info,
-    handle_callback,
-    is_allowed,
-    is_configured,
-    refresh_credentials,
+    UserInfo,
+    check_password,
+    is_password_configured,
 )
 from yao_gpt_service.config import ModelProvider, settings  # noqa: E402
 from yao_gpt_service.crews.chatbot_crew import ChatbotCrew  # noqa: E402
@@ -35,65 +29,33 @@ from yao_gpt_service.db.memory import memory  # noqa: E402
 
 
 def _check_auth() -> bool:
-    if os.environ.get("DISABLE_GOOGLE_AUTH", "").lower() in ("1", "true", "yes"):
+    if os.environ.get("DISABLE_AUTH", "").lower() in ("1", "true", "yes"):
         return True
 
-    if not is_configured():
-        return True
+    if is_password_configured():
+        return bool(st.session_state.get("password_authenticated"))
 
-    if "credentials" in st.session_state:
-        credentials = credentials_from_dict(st.session_state["credentials"])
-        refreshed = refresh_credentials(credentials)
-        if refreshed:
-            user = get_user_info(refreshed)
-            if user and is_allowed(user.email):
-                st.session_state["credentials"] = credentials_to_dict(refreshed)
-                st.session_state["user"] = user
-                return True
-
-    query_params = st.query_params
-    code = query_params.get("code")
-    if code:
-        try:
-            credentials = handle_callback(code)
-        except Exception as exc:
-            st.error(f"OAuth callback failed: {exc}")
-            st.stop()
-        if credentials:
-            user = get_user_info(credentials)
-            if user and is_allowed(user.email):
-                st.session_state["credentials"] = credentials_to_dict(credentials)
-                st.session_state["user"] = user
-                st.query_params.clear()
-                st.rerun()
-            else:
-                email = user.email if user else "unknown"
-                st.error(f"Access denied: {email} is not in the allowlist.")
-                st.stop()
-        else:
-            st.error("Failed to authenticate with Google. Please try again.")
-            st.stop()
-
-    return False
+    return True
 
 
 def _show_login() -> None:
     st.title("Yao GPT")
-    st.markdown("### Sign in to continue")
-    st.write("This app is private. Please sign in with your Google account.")
-    auth_url = get_auth_url()
-    st.caption(
-        f"Redirect URI: `{get_redirect_uri()}` — "
-        "this must match an entry in your Google Cloud Console "
-        "→ Credentials → Authorized redirect URIs."
-    )
-    st.markdown(
-        f'<a href="{auth_url}" target="_self">'
-        '<button style="padding:12px 24px;font-size:16px;cursor:pointer;'
-        "background-color:#4285F4;color:white;border:none;border-radius:4px;"
-        '">Sign in with Google</button></a>',
-        unsafe_allow_html=True,
-    )
+    st.markdown("### Sign in")
+
+    with st.form("login_form"):
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        submitted = st.form_submit_button("Login", use_container_width=True)
+
+        if submitted:
+            if check_password(username, password):
+                st.session_state["password_authenticated"] = True
+                st.session_state["user"] = UserInfo(
+                    email=username, name=username, picture=""
+                )
+                st.rerun()
+            else:
+                st.error("Invalid username or password")
 
 
 if not _check_auth():
@@ -127,7 +89,7 @@ def load_session(sid: str) -> None:
     entries = memory.retrieve_recent(sid, n_results=200)
     st.session_state.session_id = sid
     st.session_state.messages = [
-        {"role": e.role, "content": e.content} for e in reversed(entries)
+        {"role": e.role, "content": e.content} for e in entries
     ]
     st.rerun()
 

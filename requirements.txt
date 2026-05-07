@@ -6,5 +6,4 @@ pydantic>=2.12
 pydantic-settings
 tavily-python>=0.7.24
 chromadb
-google-auth-oauthlib
-google-auth
+
