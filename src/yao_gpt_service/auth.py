@@ -1,9 +1,10 @@
 """Authentication module."""
+
 from __future__ import annotations
 
 from typing import NamedTuple
 
-import streamlit as st
+from yao_gpt_service.config import settings
 
 
 class UserInfo(NamedTuple):
@@ -15,16 +16,13 @@ class UserInfo(NamedTuple):
 
 
 def is_password_configured() -> bool:
-    """Return True if username/password auth is configured in Streamlit secrets."""
-    try:
-        return bool(st.secrets["AUTH_USERNAME"] and st.secrets["AUTH_PASSWORD"])
-    except KeyError:
-        return False
+    """Return True if username/password auth is configured in environment."""
+    return bool(settings.auth_username and settings.auth_password)
 
 
 def check_password(username: str, password: str) -> bool:
-    """Validate username and password against Streamlit secrets."""
+    """Validate username and password against configured credentials."""
     return (
-        username == st.secrets.get("AUTH_USERNAME", "")
-        and password == st.secrets.get("AUTH_PASSWORD", "")
+        username == settings.auth_username
+        and password == settings.auth_password
     )

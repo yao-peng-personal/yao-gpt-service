@@ -1,4 +1,5 @@
 """Factory functions for building CrewAI agents."""
+
 from __future__ import annotations
 
 from crewai import LLM, Agent
@@ -50,7 +51,9 @@ def build_chatbot_agent(
     )
 
 
-def get_llm_summary(provider: ModelProvider | None = None, model: str | None = None) -> str:
+def get_llm_summary(
+    provider: ModelProvider | None = None, model: str | None = None
+) -> str:
     """Return a human-readable summary of the current LLM configuration.
 
     Args:

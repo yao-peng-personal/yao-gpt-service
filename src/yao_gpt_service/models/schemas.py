@@ -1,4 +1,5 @@
 """Pydantic models for FastAPI request and response schemas."""
+
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
@@ -29,7 +30,9 @@ class ChatRequest(BaseModel):
         default=None,
         description="Session ID for conversation continuity. Generated if omitted.",
     )
-    enable_search: bool = Field(default=False, description="Enable Tavily web search")
+    enable_search: bool = Field(
+        default=False, description="Enable Tavily web search"
+    )
     history: list[ChatMessage] = Field(
         default_factory=list,
         description="Recent conversation history for context",

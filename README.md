@@ -42,7 +42,7 @@ The API is available at `http://localhost:8000` with interactive docs at `/docs`
 **Frontend (Streamlit):**
 
 ```bash
-python run_frontend.py
+python frontend/run_frontend.py
 ```
 
 Opens a chat UI at `http://localhost:8501`.
@@ -68,6 +68,6 @@ src/yao_gpt_service/
 ├── tools/search_tool.py      # Tavily web search CrewAI tool
 └── db/memory.py              # ChromaDB long-term memory store
 frontend/
+├── run_frontend.py        # Frontend launcher
 └── streamlit_app.py       # Streamlit chat UI
-run_frontend.py            # Frontend launcher
 ```

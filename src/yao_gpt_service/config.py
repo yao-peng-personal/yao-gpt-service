@@ -1,4 +1,5 @@
 """Application configuration and LLM provider registry."""
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -48,6 +49,9 @@ class Settings(BaseSettings):
     deepseek_api_key: str = Field(default="", alias="DEEPSEEK_API_KEY")
     tavily_api_key: str = Field(default="", alias="TAVILY_API_KEY")
 
+    auth_username: str = Field(default="", alias="AUTH_USERNAME")
+    auth_password: str = Field(default="", alias="AUTH_PASSWORD")
+
     default_provider: ModelProvider = Field(
         default=ModelProvider.DEEPSEEK,
         alias="DEFAULT_PROVIDER",
@@ -55,15 +59,22 @@ class Settings(BaseSettings):
     default_model: str = Field(default="deepseek-chat", alias="DEFAULT_MODEL")
 
     chroma_persist_dir: str = Field(
-        default=str(Path(__file__).resolve().parent.parent.parent / "chroma_data"),
+        default=str(
+            Path(__file__).resolve().parent.parent.parent / "chroma_data"
+        ),
         alias="CHROMA_PERSIST_DIR",
     )
 
     @model_validator(mode="after")
     def _validate_provider_has_key(self) -> Settings:
         """Ensure the API key for the default provider is configured."""
-        if self.default_provider == ModelProvider.DEEPSEEK and not self.deepseek_api_key:
-            msg = "DEEPSEEK_API_KEY is required when default_provider is deepseek"
+        if (
+            self.default_provider == ModelProvider.DEEPSEEK
+            and not self.deepseek_api_key
+        ):
+            msg = (
+                "DEEPSEEK_API_KEY is required when default_provider is deepseek"
+            )
             raise ValueError(msg)
         return self
 
@@ -97,7 +108,9 @@ class Settings(BaseSettings):
             base_url="https://api.deepseek.com",
         )
 
-    def list_models(self, provider: ModelProvider | None = None) -> dict[ModelProvider, list[str]]:
+    def list_models(
+        self, provider: ModelProvider | None = None
+    ) -> dict[ModelProvider, list[str]]:
         """List available models, optionally filtered by provider.
 
         Args:

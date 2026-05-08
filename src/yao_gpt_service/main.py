@@ -1,4 +1,5 @@
 """FastAPI application entry point."""
+
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator
@@ -75,9 +76,13 @@ async def chat(request: ChatRequest) -> ChatResponse:
     provider = request.provider or settings.default_provider
 
     if provider == ModelProvider.DEEPSEEK and not settings.deepseek_api_key:
-        raise HTTPException(status_code=400, detail="DeepSeek API key not configured")
+        raise HTTPException(
+            status_code=400, detail="DeepSeek API key not configured"
+        )
     if request.enable_search and not settings.tavily_api_key:
-        raise HTTPException(status_code=400, detail="Tavily API key not configured")
+        raise HTTPException(
+            status_code=400, detail="Tavily API key not configured"
+        )
 
     try:
         crew = ChatbotCrew(
@@ -117,4 +122,6 @@ async def delete_session(session_id: str) -> dict[str, str]:
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("yao_gpt_service.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(
+        "yao_gpt_service.main:app", host="0.0.0.0", port=8000, reload=True
+    )

@@ -1,27 +1,21 @@
 """Streamlit chatbot UI with sidebar session management and authentication."""
+
 from __future__ import annotations
 
 import os
 
 import streamlit as st
 
-for key in ("DEEPSEEK_API_KEY", "TAVILY_API_KEY"):
-    try:
-        if key in st.secrets:
-            os.environ[key] = st.secrets[key]
-    except Exception:
-        pass
-
-st.set_page_config(page_title="Yao GPT", layout="wide")
-
-from yao_gpt_service.auth import (  # noqa: E402
+from yao_gpt_service.auth import (
     UserInfo,
     check_password,
     is_password_configured,
 )
-from yao_gpt_service.config import ModelProvider, settings  # noqa: E402
-from yao_gpt_service.crews.chatbot_crew import ChatbotCrew  # noqa: E402
-from yao_gpt_service.db.memory import memory  # noqa: E402
+from yao_gpt_service.config import ModelProvider, settings
+from yao_gpt_service.crews.chatbot_crew import ChatbotCrew
+from yao_gpt_service.db.memory import memory
+
+st.set_page_config(page_title="Yao GPT", layout="wide")
 
 # ---------------------------------------------------------------------------
 # Authentication
@@ -80,12 +74,14 @@ for key, default in DEFAULTS.items():
 
 
 def start_new_chat() -> None:
+    """Reset session state and start a new chat."""
     st.session_state.session_id = None
     st.session_state.messages = []
     st.rerun()
 
 
 def load_session(sid: str) -> None:
+    """Load a previously saved session by its ID."""
     entries = memory.retrieve_recent(sid, n_results=200)
     st.session_state.session_id = sid
     st.session_state.messages = [
@@ -95,6 +91,7 @@ def load_session(sid: str) -> None:
 
 
 def show_sessions() -> None:
+    """Rerun the app to refresh the session list."""
     st.rerun()
 
 
@@ -118,7 +115,9 @@ with st.sidebar:
     available = settings.list_models()
 
     provider_options = [p.value for p in ModelProvider]
-    current_provider_idx = provider_options.index(st.session_state.provider.value)
+    current_provider_idx = provider_options.index(
+        st.session_state.provider.value
+    )
     selected_provider_str = st.selectbox(
         "Provider",
         provider_options,
@@ -216,5 +215,7 @@ if prompt := st.chat_input("Type your message..."):
 
         st.markdown(response_text)
 
-    st.session_state.messages.append({"role": "assistant", "content": response_text})
+    st.session_state.messages.append(
+        {"role": "assistant", "content": response_text}
+    )
     show_sessions()

@@ -1,4 +1,5 @@
 """CrewAI crew orchestration for the chatbot."""
+
 from __future__ import annotations
 
 import uuid
@@ -17,7 +18,14 @@ from yao_gpt_service.tools.search_tool import TavilySearchTool
 class CrewResult:
     """Result container returned by ``ChatbotCrew.chat``."""
 
-    __slots__ = ("message", "model", "provider", "search_performed", "session_id", "sources")
+    __slots__ = (
+        "message",
+        "model",
+        "provider",
+        "search_performed",
+        "session_id",
+        "sources",
+    )
 
     def __init__(
         self,
@@ -93,7 +101,10 @@ class ChatbotCrew:
 
         history_context = ""
         if history:
-            history_lines = [f"{m['role'].capitalize()}: {m['content']}" for m in history[-10:]]
+            history_lines = [
+                f"{m['role'].capitalize()}: {m['content']}"
+                for m in history[-10:]
+            ]
             history_context = "\n".join(history_lines)
 
         task = Task(

@@ -1,4 +1,5 @@
 """ChromaDB-backed long-term conversation memory."""
+
 from __future__ import annotations
 
 import chromadb
@@ -14,7 +15,9 @@ class MemoryEntry:
 
     __slots__ = ("content", "id", "role", "session_id")
 
-    def __init__(self, id: str, content: str, role: str, session_id: str) -> None:
+    def __init__(
+        self, id: str, content: str, role: str, session_id: str
+    ) -> None:
         """Initialize a memory entry.
 
         Args:
@@ -65,7 +68,9 @@ class ConversationMemory:
             metadatas=[{"session_id": session_id, "role": role}],
         )
 
-    def retrieve(self, session_id: str, query: str = "", n_results: int = 10) -> list[MemoryEntry]:
+    def retrieve(
+        self, session_id: str, query: str = "", n_results: int = 10
+    ) -> list[MemoryEntry]:
         """Retrieve memory entries by semantic similarity to the query.
 
         Args:
@@ -90,17 +95,23 @@ class ConversationMemory:
 
         for i, doc_id in enumerate(results["ids"][0]):
             meta = results["metadatas"][0][i] if results["metadatas"] else {}
-            document = results["documents"][0][i] if results["documents"] else ""
-            entries.append(MemoryEntry(
-                id=str(doc_id),
-                content=str(document),
-                role=str(meta.get("role", "unknown")),
-                session_id=str(meta.get("session_id", "")),
-            ))
+            document = (
+                results["documents"][0][i] if results["documents"] else ""
+            )
+            entries.append(
+                MemoryEntry(
+                    id=str(doc_id),
+                    content=str(document),
+                    role=str(meta.get("role", "unknown")),
+                    session_id=str(meta.get("session_id", "")),
+                )
+            )
 
         return entries
 
-    def retrieve_recent(self, session_id: str, n_results: int = 10) -> list[MemoryEntry]:
+    def retrieve_recent(
+        self, session_id: str, n_results: int = 10
+    ) -> list[MemoryEntry]:
         """Retrieve the most recent conversation turns without a query.
 
         Args:
@@ -123,12 +134,14 @@ class ConversationMemory:
         for i, doc_id in enumerate(existing["ids"]):
             meta = existing["metadatas"][i] if existing["metadatas"] else {}
             document = existing["documents"][i] if existing["documents"] else ""
-            entries.append(MemoryEntry(
-                id=str(doc_id),
-                content=str(document),
-                role=str(meta.get("role", "unknown")),
-                session_id=str(meta.get("session_id", "")),
-            ))
+            entries.append(
+                MemoryEntry(
+                    id=str(doc_id),
+                    content=str(document),
+                    role=str(meta.get("role", "unknown")),
+                    session_id=str(meta.get("session_id", "")),
+                )
+            )
 
         return entries
 

@@ -1,4 +1,5 @@
 """Tavily web search tool for CrewAI agents."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -44,7 +45,9 @@ class TavilySearchTool(BaseTool):
         if not self.client:
             self.client = TavilyClient(api_key=settings.tavily_api_key)
 
-        response: dict[str, Any] = self.client.search(query=query, max_results=5)  # type: ignore[reportExplicitAny]
+        response: dict[str, Any] = self.client.search(
+            query=query, max_results=5
+        )  # type: ignore[reportExplicitAny]
 
         results: list[str] = []
         for result in response.get("results", []):
@@ -69,5 +72,7 @@ class TavilySearchTool(BaseTool):
         """
         if not self.client:
             self.client = TavilyClient(api_key=settings.tavily_api_key)
-        response: dict[str, Any] = self.client.search(query=query, max_results=5)  # type: ignore[reportExplicitAny]
+        response: dict[str, Any] = self.client.search(
+            query=query, max_results=5
+        )  # type: ignore[reportExplicitAny]
         return response.get("results", [])

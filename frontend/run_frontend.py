@@ -1,8 +1,8 @@
 """Launch the Streamlit frontend.
 
 Usage:
-    python run_frontend.py              # with auth
-    python run_frontend.py --no-auth    # skip auth
+    python frontend/run_frontend.py              # with auth
+    python frontend/run_frontend.py --no-auth    # skip auth
 """
 
 from __future__ import annotations
