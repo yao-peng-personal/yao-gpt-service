@@ -1,0 +1,13 @@
+[Unit]
+Description=Cloudflare Tunnel for Yao GPT
+After=network.target nginx.service
+
+[Service]
+Type=simple
+User=%u
+ExecStart=%h/repos/yao-gpt-service/deploy/cloudflared-tunnel.sh --name yao-gpt --hostname chat.leomira.net
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

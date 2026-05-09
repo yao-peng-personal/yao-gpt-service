@@ -1,0 +1,17 @@
+[Unit]
+Description=Yao GPT FastAPI Backend
+After=network.target
+
+[Service]
+Type=simple
+User=%u
+WorkingDirectory=%h/repos/yao-gpt-service
+Environment="PATH=%h/repos/yao-gpt-service/.venv/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=%h/repos/yao-gpt-service/.venv/bin/python -m uvicorn yao_gpt_service.main:app \
+    --host 127.0.0.1 \
+    --port 8000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
