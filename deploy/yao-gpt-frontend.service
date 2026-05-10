@@ -1,5 +1,5 @@
 [Unit]
-Description=Yao GPT Streamlit Frontend
+Description=Yao GPT Gradio Frontend
 After=network.target
 
 [Service]
@@ -7,13 +7,7 @@ Type=simple
 User=%u
 WorkingDirectory=%h/repos/yao-gpt-service
 Environment="PATH=%h/repos/yao-gpt-service/.venv/bin:/usr/local/bin:/usr/bin:/bin"
-ExecStart=%h/repos/yao-gpt-service/.venv/bin/python -m streamlit run frontend/streamlit_app.py \
-    --server.port 8501 \
-    --server.address 127.0.0.1 \
-    --server.headless true \
-    --server.enableCORS false \
-    --server.enableXsrfProtection true \
-    --server.enableWebsocketCompression true
+ExecStart=%h/repos/yao-gpt-service/.venv/bin/python frontend/run_frontend.py
 Restart=always
 RestartSec=5
 

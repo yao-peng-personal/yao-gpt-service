@@ -10,7 +10,7 @@ dependencies = [
     "pydantic>=2.12",
     "pydantic-settings",
     "tavily-python>=0.7.24",
-    "streamlit>=1.57.0",
+    "gradio>=5.0",
     "chromadb",
 ]
 

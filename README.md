@@ -24,7 +24,7 @@ AUTH_PASSWORD=your_password
 DISABLE_AUTH=true                                       # optional — set to true to skip login
 ```
 
-All credentials are read from `.env` via pydantic-settings. Streamlit secrets (`.streamlit/secrets.toml`) are no longer used.
+All credentials are read from `.env` via pydantic-settings.
 
 Optional overrides:
 
@@ -44,14 +44,14 @@ uv run python src/yao_gpt_service/main.py
 
 The API is available at `http://localhost:8000` with interactive docs at `/docs`.
 
-**Frontend (Streamlit):**
+**Frontend (Gradio):**
 
 ```bash
 uv run python frontend/run_frontend.py              # with auth
 uv run python frontend/run_frontend.py --no-auth    # skip login
 ```
 
-Opens a chat UI at `http://localhost:8501`.
+Opens a chat UI at `http://localhost:7860`. PWA support is enabled (`pwa=True`) so the app can be installed on mobile and desktop.
 
 ## API Endpoints
 
@@ -100,13 +100,13 @@ Opens a browser — log in with your Cloudflare account. Only needed once.
 
 ### 4. Start all services
 
-The architecture is `Internet → Cloudflare (DDoS filtered) → cloudflared → nginx:8080 → Streamlit:8501`.
+The architecture is `Internet → Cloudflare (DDoS filtered) → cloudflared → nginx:8080 → Gradio:7860`.
 
 ```bash
 # Terminal 1 — API backend (optional, only if exposing /api/ endpoints)
 cd ~/repos/yao-gpt-service && uv run python src/yao_gpt_service/main.py
 
-# Terminal 2 — Streamlit frontend
+# Terminal 2 — Gradio frontend
 cd ~/repos/yao-gpt-service && uv run python frontend/run_frontend.py
 
 # Terminal 3 — Cloudflare Tunnel (makes it public at chat.leomira.net)
@@ -130,8 +130,8 @@ To keep services running after closing terminals, prefix with `nohup` or use `tm
 | **nginx timeouts** | 10 s headers/body | Mitigates Slowloris / slow-read attacks |
 | **nginx body size** | 1 MB max | Prevents memory exhaustion from oversized payloads |
 | **Security headers** | X-Frame, XSS, etc. | Clickjacking, MIME sniffing, XSS protection |
-| **Streamlit XSRF** | Enabled | Cross-site request forgery protection |
-| **Auth** | Username/password | Login gate via `.env` credentials |
+| **Auth** | HTTP basic auth | Browser-native login dialog via `.env` credentials |
+| **PWA** | Installable | `pwa=True` — install as standalone app on mobile/desktop |
 
 ## Project Structure
 
@@ -146,7 +146,7 @@ src/yao_gpt_service/
 └── db/memory.py              # ChromaDB long-term memory store
 frontend/
 ├── run_frontend.py        # Frontend launcher
-└── streamlit_app.py       # Streamlit chat UI
+└── gradio_app.py          # Gradio chat UI
 deploy/
 ├── nginx.conf                  # Reverse proxy with rate limiting
 ├── cloudflared-tunnel.sh       # Cloudflare Tunnel launcher
