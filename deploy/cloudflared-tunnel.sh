@@ -44,7 +44,7 @@ if [[ -n "$NAME" ]]; then
         TUNNEL_ID=$(cloudflared tunnel list -o json | python3 -c \
             "import sys,json; [print(t['id']) for t in json.load(sys.stdin) if t['name']=='$NAME']")
         echo "[+] Routing DNS: $HOSTNAME → $TUNNEL_ID"
-        cloudflared tunnel route dns "$TUNNEL_ID" "$HOSTNAME"
+        cloudflared tunnel route dns -f "$TUNNEL_ID" "$HOSTNAME"
     fi
 
     # Write tunnel config with ingress rule
