@@ -66,7 +66,7 @@ class ChatbotCrew:
         provider: ModelProvider | None = None,
         model: str | None = None,
         session_id: str | None = None,
-        enable_search: bool = False,
+        enable_search: bool = True,
     ) -> None:
         """Initialize a chat crew.
 
