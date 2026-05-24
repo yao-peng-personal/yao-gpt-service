@@ -56,7 +56,7 @@ def create_demo() -> gr.Blocks:
                         interactive=True,
                     )
                     search_cb = gr.Checkbox(
-                        label="Enable web search", value=False
+                        label="Enable web search", value=True
                     )
 
                 with gr.Accordion("Conversations", open=True):
