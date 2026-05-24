@@ -13,6 +13,7 @@ def build_chatbot_agent(
     provider: ModelProvider | None = None,
     model: str | None = None,
     enable_search: bool = False,
+    stream: bool = False,
 ) -> Agent:
     """Build a CrewAI chatbot agent with the specified LLM configuration.
 
@@ -20,11 +21,13 @@ def build_chatbot_agent(
         provider: The LLM provider to use. Uses the default if ``None``.
         model: The model name. Uses the default if ``None``.
         enable_search: If ``True``, attach the Tavily search tool.
+        stream: If ``True``, enable LLM token streaming.
 
     Returns:
         A configured CrewAI ``Agent`` instance.
     """
     llm_config = settings.resolve_llm(provider=provider, model=model)
+    llm_config["stream"] = stream
     llm = LLM(**llm_config)
 
     tools: list[BaseTool] = []

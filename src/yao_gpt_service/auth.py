@@ -2,17 +2,7 @@
 
 from __future__ import annotations
 
-from typing import NamedTuple
-
 from yao_gpt_service.config import settings
-
-
-class UserInfo(NamedTuple):
-    """Basic user profile information."""
-
-    email: str
-    name: str
-    picture: str
 
 
 def is_password_configured() -> bool:

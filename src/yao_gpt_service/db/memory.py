@@ -122,18 +122,19 @@ class ConversationMemory:
             A list of recent ``MemoryEntry`` objects.
         """
         where: Where = {"session_id": session_id}
-        existing = self._collection.get(
-            where=where,
-            limit=n_results,
-        )
+        existing = self._collection.get(where=where)
 
         entries: list[MemoryEntry] = []
         if not existing["ids"]:
             return entries
 
-        for i, doc_id in enumerate(existing["ids"]):
-            meta = existing["metadatas"][i] if existing["metadatas"] else {}
-            document = existing["documents"][i] if existing["documents"] else ""
+        ids = existing["ids"][-n_results:]
+        metadatas = existing.get("metadatas", [])[-n_results:]
+        documents = existing.get("documents", [])[-n_results:]
+
+        for i, doc_id in enumerate(ids):
+            meta = metadatas[i] if i < len(metadatas) else {}
+            document = documents[i] if i < len(documents) else ""
             entries.append(
                 MemoryEntry(
                     id=str(doc_id),
@@ -189,6 +190,26 @@ class ConversationMemory:
                 seen.add(sid)
                 sessions.append(sid)
         return sessions
+
+    def get_first_user_message(self, session_id: str) -> str | None:
+        """Return the content of the earliest user message for a session.
+
+        Args:
+            session_id: The conversation session to query.
+
+        Returns:
+            The message content, or ``None`` if no user message exists.
+        """
+        where: Where = {
+            "$and": [
+                {"session_id": session_id},
+                {"role": "user"},
+            ]
+        }
+        existing = self._collection.get(where=where, limit=1)
+        if existing["documents"]:
+            return str(existing["documents"][0])
+        return None
 
 
 memory = ConversationMemory()

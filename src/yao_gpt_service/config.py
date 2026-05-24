@@ -18,7 +18,7 @@ class ModelProvider(StrEnum):
     DEEPSEEK = "deepseek"
 
 
-"""Registry mapping provider models to CrewAI-compatible model strings."""
+# Registry mapping provider models to CrewAI-compatible model strings.
 MODEL_REGISTRY: dict[ModelProvider, dict[str, str]] = {
     ModelProvider.DEEPSEEK: {
         "deepseek-chat": "deepseek/deepseek-chat",

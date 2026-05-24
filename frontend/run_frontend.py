@@ -37,4 +37,5 @@ if __name__ == "__main__":
         auth=auth_fn if not args.no_auth else None,
         pwa=True,
         show_error=True,
+        css=".session-list { max-height: 360px; overflow-y: auto !important; }",
     )

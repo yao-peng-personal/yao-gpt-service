@@ -23,6 +23,7 @@ class TavilySearchTool(BaseTool):
         "that requires up-to-date information from the internet."
     )
     client: TavilyClient | None = None
+    _last_raw_results: list[dict[str, Any]]
 
     def __init__(self, **kwargs: Any) -> None:  # type: ignore[reportExplicitAny]
         """Initialize the tool and create a Tavily client.
@@ -32,6 +33,7 @@ class TavilySearchTool(BaseTool):
         """
         super().__init__(**kwargs)
         self.client = TavilyClient(api_key=settings.tavily_api_key)
+        self._last_raw_results = []
 
     def _run(self, query: str) -> str:
         """Execute a web search and return formatted results.
@@ -42,12 +44,11 @@ class TavilySearchTool(BaseTool):
         Returns:
             Formatted search results as a string, or an empty-result message.
         """
-        if not self.client:
-            self.client = TavilyClient(api_key=settings.tavily_api_key)
-
         response: dict[str, Any] = self.client.search(
             query=query, max_results=5
         )  # type: ignore[reportExplicitAny]
+
+        self._last_raw_results = response.get("results", [])
 
         results: list[str] = []
         for result in response.get("results", []):
@@ -61,18 +62,11 @@ class TavilySearchTool(BaseTool):
 
         return "\n---\n".join(results)
 
-    def get_raw_results(self, query: str) -> list[dict[str, Any]]:  # type: ignore[reportExplicitAny]
-        """Execute a search and return raw result dictionaries.
-
-        Args:
-            query: The search query string.
+    def get_raw_results(self) -> list[dict[str, Any]]:
+        """Return raw results from the most recent search (no API call).
 
         Returns:
-            A list of raw result dicts with title, url, and content keys.
+            A list of raw result dicts from the last ``_run`` invocation,
+            or an empty list if no search has been performed yet.
         """
-        if not self.client:
-            self.client = TavilyClient(api_key=settings.tavily_api_key)
-        response: dict[str, Any] = self.client.search(
-            query=query, max_results=5
-        )  # type: ignore[reportExplicitAny]
-        return response.get("results", [])
+        return self._last_raw_results

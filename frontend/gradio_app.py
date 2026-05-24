@@ -8,7 +8,7 @@ import gradio as gr
 
 from yao_gpt_service.auth import check_password, is_password_configured
 from yao_gpt_service.config import ModelProvider, settings
-from yao_gpt_service.crews.chatbot_crew import ChatbotCrew
+from yao_gpt_service.crews.chatbot_crew import ChatbotCrew, CrewResult
 from yao_gpt_service.db.memory import memory
 
 _provider_models = settings.list_models()
@@ -25,7 +25,9 @@ def auth_fn(username: str, password: str) -> bool:
 
 def create_demo() -> gr.Blocks:
     """Build and return the Gradio Blocks demo."""
-    with gr.Blocks(title="Yao GPT") as demo:
+    with gr.Blocks(
+        title="Yao GPT",
+    ) as demo:
         # ---- State --------------------------------------------------------------
         sid_state = gr.State(None)
 
@@ -58,10 +60,11 @@ def create_demo() -> gr.Blocks:
                     )
 
                 with gr.Accordion("Conversations", open=True):
-                    session_list = gr.Dropdown(
-                        choices=_list_sessions(),
+                    session_list = gr.Radio(
+                        choices=_list_session_choices(),
                         label="Sessions",
                         interactive=True,
+                        elem_classes="session-list",
                     )
                     with gr.Row():
                         load_btn = gr.Button("Load", size="sm")
@@ -73,7 +76,7 @@ def create_demo() -> gr.Blocks:
             # Main chat area (right column)
             # -------------------------------------------------------------------
             with gr.Column(scale=8):
-                chatbot = gr.Chatbot(label="Yao GPT Service")
+                chatbot = gr.Chatbot(label="Yao GPT Service", height=600)
                 msg_input = gr.Textbox(
                     label="Type your message...",
                     placeholder="Ask anything...",
@@ -97,7 +100,7 @@ def create_demo() -> gr.Blocks:
 
         def _new_chat() -> tuple:
             """Reset session and clear chat."""
-            return None, [], gr.Dropdown(choices=_list_sessions())
+            return None, [], gr.Radio(choices=_list_session_choices())
 
         new_chat_btn.click(
             fn=_new_chat,
@@ -123,7 +126,11 @@ def create_demo() -> gr.Blocks:
         ) -> tuple:
             """Delete a session from storage and refresh the list."""
             if not selected_sid:
-                return current_sid, [], gr.Dropdown(choices=_list_sessions())
+                return (
+                    current_sid,
+                    [],
+                    gr.Radio(choices=_list_session_choices()),
+                )
             memory.delete_session(selected_sid)
             new_sid = current_sid
             new_messages: list[dict[str, str]] = []
@@ -133,7 +140,7 @@ def create_demo() -> gr.Blocks:
             return (
                 new_sid,
                 new_messages,
-                gr.Dropdown(choices=_list_sessions()),
+                gr.Radio(choices=_list_session_choices()),
             )
 
         delete_btn.click(
@@ -149,15 +156,16 @@ def create_demo() -> gr.Blocks:
             provider_value: str,
             model_value: str,
             enable_search: bool,
-        ) -> tuple:
-            """Process a chat message through CrewAI and update the UI."""
+        ):
+            """Stream a chat response token-by-token through CrewAI."""
             if not message.strip():
-                return (
+                yield (
                     "",
                     session_id,
                     history,
-                    gr.Dropdown(choices=_list_sessions()),
+                    gr.Radio(choices=_list_session_choices()),
                 )
+                return
 
             crew = ChatbotCrew(
                 provider=ModelProvider(provider_value),
@@ -171,17 +179,53 @@ def create_demo() -> gr.Blocks:
                 for m in history[-20:]
             ]
 
-            result = crew.chat(user_message=message, history=history_dicts)
+            new_sid = crew.session_id
+            history.append({"role": "user", "content": message})
+            history.append({"role": "assistant", "content": ""})
 
-            new_sid = result.session_id
-            history.append({"role": "assistant", "content": result.message})
-
-            return (
+            yield (
                 "",
                 new_sid,
                 history,
-                gr.Dropdown(choices=_list_sessions(), value=new_sid),
+                gr.Radio(choices=_list_session_choices(), value=new_sid),
             )
+
+            token_queue = crew.chat_stream(
+                user_message=message, history=history_dicts
+            )
+
+            while True:
+                item = token_queue.get()
+                if isinstance(item, CrewResult):
+                    history[-1]["content"] = item.message
+                    yield (
+                        "",
+                        item.session_id,
+                        history,
+                        gr.Radio(
+                            choices=_list_session_choices(),
+                            value=item.session_id,
+                        ),
+                    )
+                    return
+                if isinstance(item, Exception):
+                    history[-1]["content"] = f"Error: {item}"
+                    yield (
+                        "",
+                        new_sid,
+                        history,
+                        gr.Radio(
+                            choices=_list_session_choices(), value=new_sid
+                        ),
+                    )
+                    return
+                history[-1]["content"] += item
+                yield (
+                    "",
+                    new_sid,
+                    history,
+                    gr.Radio(choices=_list_session_choices(), value=new_sid),
+                )
 
         msg_input.submit(
             fn=_chat,
@@ -199,6 +243,16 @@ def create_demo() -> gr.Blocks:
     return demo
 
 
-def _list_sessions() -> list[str]:
-    """Return sorted session IDs for the dropdown."""
-    return memory.list_sessions()
+def _get_session_label(session_id: str) -> str:
+    """Return a human-readable label for a session."""
+    first_message = memory.get_first_user_message(session_id)
+    if first_message:
+        first_message = first_message.strip()
+        return first_message[:60] + ("..." if len(first_message) > 60 else "")
+    return session_id[:12]
+
+
+def _list_session_choices() -> list[tuple[str, str]]:
+    """Return (label, value) pairs for the session radio list."""
+    sessions = memory.list_sessions()
+    return [(_get_session_label(sid), sid) for sid in sessions]

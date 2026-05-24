@@ -31,7 +31,7 @@ class ChatRequest(BaseModel):
         description="Session ID for conversation continuity. Generated if omitted.",
     )
     enable_search: bool = Field(
-        default=False, description="Enable Tavily web search"
+        default=True, description="Enable Tavily web search"
     )
     history: list[ChatMessage] = Field(
         default_factory=list,

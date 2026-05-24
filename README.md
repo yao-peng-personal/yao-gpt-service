@@ -150,7 +150,7 @@ frontend/
 deploy/
 ├── nginx.conf                  # Reverse proxy with rate limiting
 ├── cloudflared-tunnel.sh       # Cloudflare Tunnel launcher
-├── yao-gpt-frontend.service    # systemd unit for Streamlit (optional)
+├── yao-gpt-frontend.service    # systemd unit for Gradio (optional)
 ├── yao-gpt-api.service         # systemd unit for FastAPI (optional)
 └── cloudflared.service         # systemd unit for tunnel (optional)
 ```
