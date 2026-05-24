@@ -37,5 +37,16 @@ if __name__ == "__main__":
         auth=auth_fn if not args.no_auth else None,
         pwa=True,
         show_error=True,
-        css=".session-list { max-height: 360px; overflow-y: auto !important; }",
+        css="""
+.session-list { max-height: 360px; overflow-y: auto !important; }
+.bubble-row[data-testid="user"] .bubble {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: #fff !important;
+    border-radius: 18px 18px 4px 18px !important;
+}
+.bubble-row[data-testid="assistant"] .bubble {
+    background: #f3f4f6 !important;
+    border-radius: 18px 18px 18px 4px !important;
+}
+""",
     )

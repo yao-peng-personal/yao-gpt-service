@@ -27,6 +27,7 @@ def create_demo() -> gr.Blocks:
     """Build and return the Gradio Blocks demo."""
     with gr.Blocks(
         title="Yao GPT",
+        theme=gr.themes.Soft(),
     ) as demo:
         # ---- State --------------------------------------------------------------
         sid_state = gr.State(None)
@@ -35,7 +36,7 @@ def create_demo() -> gr.Blocks:
         # Sidebar (left column)
         # ---------------------------------------------------------------------------
         with gr.Row():
-            with gr.Column(scale=2):
+            with gr.Column(scale=3):
                 gr.Markdown("# Yao GPT")
 
                 new_chat_btn = gr.Button(
@@ -75,8 +76,15 @@ def create_demo() -> gr.Blocks:
             # -------------------------------------------------------------------
             # Main chat area (right column)
             # -------------------------------------------------------------------
-            with gr.Column(scale=8):
-                chatbot = gr.Chatbot(label="Yao GPT Service", height=600)
+            with gr.Column(scale=9):
+                chatbot = gr.Chatbot(
+                    label="Yao GPT Service",
+                    height=600,
+                    avatar_images=(
+                        "https://api.dicebear.com/9.x/initials/svg?seed=User",
+                        "https://api.dicebear.com/9.x/bottts/svg?seed=Assistant",
+                    ),
+                )
                 msg_input = gr.Textbox(
                     label="Type your message...",
                     placeholder="Ask anything...",
