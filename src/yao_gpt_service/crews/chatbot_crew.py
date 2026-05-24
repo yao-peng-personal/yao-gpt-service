@@ -5,6 +5,7 @@ from __future__ import annotations
 import queue
 import threading
 import uuid
+from datetime import datetime
 
 from crewai import Crew, Process, Task
 from crewai.events.event_bus import crewai_event_bus
@@ -103,6 +104,12 @@ class ChatbotCrew:
 
         persisted_history = format_conversation_history(self.session_id)
 
+        date_context = ""
+        if memory.count(self.session_id) == 0:
+            date_context = (
+                f"Current date: {datetime.now().strftime('%A, %B %d, %Y')}\n\n"
+            )
+
         history_context = ""
         if history:
             history_lines = [
@@ -113,6 +120,7 @@ class ChatbotCrew:
 
         task = Task(
             description=(
+                f"{date_context}"
                 f"Conversation history from memory:\n{persisted_history}\n\n"
                 f"Recent context:\n{history_context}\n\n"
                 f"User message: {user_message}"
@@ -192,6 +200,12 @@ class ChatbotCrew:
 
         persisted_history = format_conversation_history(self.session_id)
 
+        date_context = ""
+        if memory.count(self.session_id) <= 1:
+            date_context = (
+                f"Current date: {datetime.now().strftime('%A, %B %d, %Y')}\n\n"
+            )
+
         history_context = ""
         if history:
             history_lines = [
@@ -202,6 +216,7 @@ class ChatbotCrew:
 
         task = Task(
             description=(
+                f"{date_context}"
                 f"Conversation history from memory:\n{persisted_history}\n\n"
                 f"Recent context:\n{history_context}\n\n"
                 f"User message: {user_message}"
