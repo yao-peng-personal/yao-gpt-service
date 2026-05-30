@@ -28,6 +28,7 @@ def create_demo() -> gr.Blocks:
     with gr.Blocks(
         title="Yao GPT",
         theme=gr.themes.Soft(),
+        fill_height=True,
     ) as demo:
         # ---- State --------------------------------------------------------------
         sid_state = gr.State(None)
@@ -79,7 +80,7 @@ def create_demo() -> gr.Blocks:
             with gr.Column(scale=9):
                 chatbot = gr.Chatbot(
                     label="Yao GPT Service",
-                    height=600,
+                    height="75vh",
                     avatar_images=(
                         "https://api.dicebear.com/9.x/initials/svg?seed=User",
                         "https://api.dicebear.com/9.x/bottts/svg?seed=Assistant",
